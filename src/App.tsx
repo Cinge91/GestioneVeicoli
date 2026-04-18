@@ -1349,7 +1349,7 @@ const MaintenanceFormView = ({
               placeholder="Pezzo..."
               value={partName}
               onChange={(e) => setPartName(e.target.value)}
-              className="flex-1 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
+              className="flex-1 min-w-0 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
             />
             <input
               type="number"
@@ -1357,14 +1357,14 @@ const MaintenanceFormView = ({
               placeholder="€"
               value={partCost}
               onChange={(e) => setPartCost(e.target.value)}
-              className="w-16 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
+              className="w-14 shrink-0 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
             />
 
             {/* ANTEPRIMA FOTO MIGLIORATA */}
             <button
               type="button"
               onClick={() => setShowPhotoSelector(true)}
-              className="relative flex items-center justify-center w-11 h-11 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm shrink-0 overflow-hidden"
+              className="relative flex items-center justify-center w-11 h-11 shrink-0 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm overflow-hidden"
             >
               {partImage ? (
                 <img
@@ -1382,7 +1382,7 @@ const MaintenanceFormView = ({
               type="button"
               onClick={handleAddPart}
               disabled={!partName.trim() || !partCost}
-              className="bg-gray-900 text-white w-11 h-11 flex items-center justify-center rounded-lg disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95 shrink-0 transition-opacity"
+              className="bg-gray-900 text-white w-11 h-11 shrink-0 flex items-center justify-center rounded-lg disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95 transition-opacity"
             >
               <Plus className="w-5 h-5" />
             </button>
