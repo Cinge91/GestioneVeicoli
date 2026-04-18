@@ -21,25 +21,16 @@ import {
   Database,
   Trash2,
   ChevronLeft,
-  Moon,
-  Sun,
-  MonitorSmartphone,
-  BellOff,
-  BellRing,
   CheckCircle,
   CalendarCheck,
   Pencil,
   RefreshCw,
-  RotateCcw,
-  DownloadCloud,
   ChevronDown,
 } from "lucide-react";
 
-// --- DATI E CONFIGURAZIONI ---
 const initialVehicles = [];
 
 const defaultPreferences = {
-  theme: "system",
   notificationsEnabled: true,
   deadlines: {
     insurance: { days: 30, color: "orange" },
@@ -49,10 +40,7 @@ const defaultPreferences = {
   },
   notificationTime: "09:00",
   disabledVehicles: [],
-  autoBackup: {
-    enabled: true,
-    frequency: "daily",
-  },
+  autoBackup: { enabled: true, frequency: "daily" },
 };
 
 const colorOptions = {
@@ -60,59 +48,39 @@ const colorOptions = {
     bg: "bg-orange-500",
     text: "text-orange-600",
     lightBg: "bg-orange-50",
-    border: "border-orange-200",
   },
-  blue: {
-    bg: "bg-blue-500",
-    text: "text-blue-600",
-    lightBg: "bg-blue-50",
-    border: "border-blue-200",
-  },
+  blue: { bg: "bg-blue-500", text: "text-blue-600", lightBg: "bg-blue-50" },
   purple: {
     bg: "bg-purple-500",
     text: "text-purple-600",
     lightBg: "bg-purple-50",
-    border: "border-purple-200",
   },
   emerald: {
     bg: "bg-emerald-500",
     text: "text-emerald-600",
     lightBg: "bg-emerald-50",
-    border: "border-emerald-200",
-  },
-  pink: {
-    bg: "bg-pink-500",
-    text: "text-pink-600",
-    lightBg: "bg-pink-50",
-    border: "border-pink-200",
-  },
-  indigo: {
-    bg: "bg-indigo-500",
-    text: "text-indigo-600",
-    lightBg: "bg-indigo-50",
-    border: "border-indigo-200",
   },
 };
 
-// --- FUNZIONI DI UTILITÀ GLOBALI ---
 const getDaysUntil = (dateString) => {
   if (!dateString) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const targetDate = new Date(dateString);
-  const diffTime = targetDate - today;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
 };
 
 const formatDate = (dateString) => {
   if (!dateString) return "Non impostata";
-  const options = { year: "numeric", month: "short", day: "numeric" };
-  return new Date(dateString).toLocaleDateString("it-IT", options);
+  return new Date(dateString).toLocaleDateString("it-IT", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 const formatDateTime = (isoString) => {
-  const d = new Date(isoString);
-  return d.toLocaleDateString("it-IT", {
+  return new Date(isoString).toLocaleDateString("it-IT", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -128,9 +96,7 @@ const deadlineLabels = {
   service: "Tagliando",
 };
 
-// ==========================================
-// COMPONENTE: RITAGLIO FOTO
-// ==========================================
+// --- COMPONENTE: RITAGLIO FOTO (Migliorato per gestire fotocamera) ---
 const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -155,12 +121,10 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
     e.target.setPointerCapture(e.pointerId);
   };
-
   const handlePointerMove = (e) => {
-    if (!isDragging) return;
-    setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+    if (isDragging)
+      setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
-
   const handlePointerUp = (e) => {
     setIsDragging(false);
     e.target.releasePointerCapture(e.pointerId);
@@ -171,14 +135,11 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
     canvas.width = CROP_SIZE;
     canvas.height = CROP_SIZE;
     const ctx = canvas.getContext("2d");
-
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, CROP_SIZE, CROP_SIZE);
-
     ctx.translate(CROP_SIZE / 2, CROP_SIZE / 2);
     ctx.translate(position.x, position.y);
     ctx.scale(zoom, zoom);
-
     ctx.drawImage(
       imgRef.current,
       -imgSize.w / 2,
@@ -186,19 +147,17 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
       imgSize.w,
       imgSize.h
     );
-
     onCropDone(canvas.toDataURL("image/jpeg", 0.85));
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[150] flex flex-col items-center justify-center animate-in fade-in duration-300">
       <div className="text-white text-center mb-8 px-6">
         <h3 className="font-bold text-2xl mb-2">Adatta la foto</h3>
         <p className="text-base text-slate-300">
-          Trascina per centrare e usa la barra in basso per lo zoom.
+          Trascina per centrare e usa la barra in basso.
         </p>
       </div>
-
       <div
         className="relative bg-slate-800 overflow-hidden rounded-full shadow-[0_0_0_9999px_rgba(15,23,42,0.85)] ring-4 ring-white/30"
         style={{ width: CROP_SIZE, height: CROP_SIZE, touchAction: "none" }}
@@ -226,7 +185,6 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
           }}
         />
       </div>
-
       <div className="w-full max-w-sm px-8 mt-12 flex items-center gap-4 text-white">
         <ImageIcon className="w-6 h-6 text-slate-400 shrink-0" />
         <input
@@ -240,7 +198,6 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
         />
         <ImageIcon className="w-10 h-10 shrink-0 text-white" />
       </div>
-
       <div className="flex gap-5 mt-16 w-full max-w-sm px-6">
         <button
           type="button"
@@ -261,9 +218,87 @@ const ImageCropper = ({ imageSrc, onCropDone, onCancel }) => {
   );
 };
 
-// ==========================================
-// VISTE PRINCIPALI DELL'APP
-// ==========================================
+// --- COMPONENTE: SELETTORE FOTO (Nuovo: Galleria o Fotocamera) ---
+const PhotoSourceSelector = ({ onImageSelected, onCancel }) => {
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+
+  const handleFileChange = (e, isCamera = false) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onImageSelected(reader.result);
+    };
+    reader.readAsDataURL(file);
+    // Reset file inputs to allow selecting the same file again
+    e.target.value = null;
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/70 z-[140] flex items-end justify-center p-4 animate-in fade-in"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-t-3xl rounded-b-xl w-full max-w-md p-6 animate-in slide-in-from-bottom-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+        <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+          Aggiungi Foto
+        </h3>
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={() => cameraInputRef.current.click()}
+            className="flex flex-col items-center justify-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100 active:bg-slate-100 transition-colors"
+          >
+            <Camera className="w-10 h-10 text-slate-500" />
+            <span className="font-bold text-sm text-slate-700">
+              Scatta Foto
+            </span>
+          </button>
+
+          <button
+            onClick={() => fileInputRef.current.click()}
+            className="flex flex-col items-center justify-center gap-3 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100 active:bg-slate-100 transition-colors"
+          >
+            <ImageIcon className="w-10 h-10 text-slate-500" />
+            <span className="font-bold text-sm text-slate-700">
+              Dalla Galleria
+            </span>
+          </button>
+        </div>
+
+        <button
+          onClick={onCancel}
+          className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold active:bg-gray-200"
+        >
+          Annulla
+        </button>
+
+        {/* Hidden inputs */}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          ref={cameraInputRef}
+          onChange={(e) => handleFileChange(e, true)}
+          className="hidden"
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={(e) => handleFileChange(e, false)}
+          className="hidden"
+        />
+      </div>
+    </div>
+  );
+};
+
 const HomeView = ({
   vehicles,
   setCurrentView,
@@ -275,21 +310,16 @@ const HomeView = ({
   const getGroupedDeadlines = () => {
     let grouped = [];
     if (!preferences.notificationsEnabled) return grouped;
-
     vehicles.forEach((v) => {
       if (preferences.disabledVehicles?.includes(v.id)) return;
-
       let vDeadlines = [];
       Object.entries(v.deadlines).forEach(([type, date]) => {
         const days = getDaysUntil(date);
         const pref =
           preferences.deadlines[type] || defaultPreferences.deadlines[type];
-
-        if (days !== null && days <= pref.days) {
+        if (days !== null && days <= pref.days)
           vDeadlines.push({ type, date, days, color: pref.color });
-        }
       });
-
       if (vDeadlines.length > 0) {
         vDeadlines.sort((a, b) => a.days - b.days);
         grouped.push({ vehicle: v, deadlines: vDeadlines });
@@ -304,55 +334,50 @@ const HomeView = ({
 
   return (
     <div className="pb-28 animate-in fade-in slide-in-from-bottom-4 duration-300 min-h-screen">
-      <header className="pt-12 pb-6 px-6 bg-white sticky top-0 z-10 border-b border-gray-50">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="p-2 -ml-2 text-gray-900 active:bg-gray-100 rounded-full transition-colors"
-            >
-              <Menu className="w-7 h-7" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                Il mio Garage
-              </h1>
-              <p className="text-gray-500 text-sm mt-1">
-                {vehicles.length === 0
-                  ? "Nessun veicolo"
-                  : `${vehicles.length} veicol${
-                      vehicles.length === 1 ? "o" : "i"
-                    }`}
-              </p>
-            </div>
+      <header className="pt-12 pb-6 px-6 bg-white sticky top-0 z-10 border-b border-gray-50 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 -ml-2 text-gray-900 active:bg-gray-100 rounded-full transition-colors"
+          >
+            <Menu className="w-7 h-7" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Il mio Garage
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              {vehicles.length === 0
+                ? "Nessun veicolo"
+                : `${vehicles.length} mezzi`}
+            </p>
           </div>
-
-          <div className="relative p-2 -mr-2">
-            {preferences.notificationsEnabled ? (
-              <Bell className="text-gray-400 w-7 h-7" />
-            ) : (
-              <BellOff className="text-gray-300 w-7 h-7" />
-            )}
-            {upcomingGrouped.length > 0 && preferences.notificationsEnabled && (
-              <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-            )}
-          </div>
+        </div>
+        <div className="relative p-2 -mr-2">
+          {preferences.notificationsEnabled ? (
+            <Bell className="text-gray-400 w-7 h-7" />
+          ) : (
+            <Bell className="text-gray-300 w-7 h-7 opacity-50" />
+          )}
+          {upcomingGrouped.length > 0 && preferences.notificationsEnabled && (
+            <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+          )}
         </div>
       </header>
 
       <main className="px-6 space-y-8 mt-8">
         {vehicles.length === 0 && (
           <div className="text-center py-16 animate-in zoom-in-95 duration-500 delay-150">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
               <Car className="w-10 h-10 text-gray-300 absolute -ml-4 -mt-4" />
               <Bike className="w-8 h-8 text-gray-400 absolute ml-6 mt-4" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Il tuo garage è vuoto
+              Garage vuoto
             </h2>
             <p className="text-gray-500 text-base max-w-[250px] mx-auto leading-relaxed">
-              Inizia ad aggiungere i tuoi veicoli per gestire bollo,
-              assicurazione e manutenzione in un solo posto.
+              Aggiungi i tuoi veicoli per gestire bollo, assicurazione e
+              manutenzione.
             </p>
           </div>
         )}
@@ -368,7 +393,13 @@ const HomeView = ({
                   key={idx}
                   className="bg-white p-5 rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.06)] border border-gray-100"
                 >
-                  <h3 className="font-bold text-gray-900 mb-4 pb-4 border-b border-gray-50 flex items-center gap-3 text-lg">
+                  <h3
+                    className="font-bold text-gray-900 mb-4 pb-4 border-b border-gray-50 flex items-center gap-3 text-lg cursor-pointer"
+                    onClick={() => {
+                      setSelectedVehicle(group.vehicle);
+                      setCurrentView("vehicle");
+                    }}
+                  >
                     {group.vehicle.image ? (
                       <img
                         src={group.vehicle.image}
@@ -385,46 +416,43 @@ const HomeView = ({
                       {group.vehicle.licensePlate}
                     </span>
                   </h3>
-
                   <div className="space-y-3">
                     {group.deadlines.map((item, i) => {
                       const themeColors =
                         colorOptions[item.color] || colorOptions.orange;
                       const isExpired = item.days < 0;
-                      const containerClass = `${themeColors.lightBg} border border-transparent`;
-                      const titleColor = themeColors.text;
-                      const badgeClass = isExpired
-                        ? "bg-red-100 text-red-700"
-                        : "bg-red-50 text-red-500";
-
                       return (
                         <div
                           key={i}
                           onClick={() =>
                             onDeadlineClick(group.vehicle, item.type)
                           }
-                          className={`p-4 rounded-2xl flex items-center gap-4 cursor-pointer active:scale-95 transition-all ${containerClass}`}
+                          className={`p-4 rounded-2xl flex items-center gap-4 cursor-pointer active:scale-95 transition-all ${themeColors.lightBg}`}
                         >
-                          <div
-                            className={`w-10 h-10 rounded-full bg-white/60 flex items-center justify-center shrink-0 shadow-sm`}
-                          >
-                            <Calendar className={`w-5 h-5 ${titleColor}`} />
+                          <div className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center shrink-0 shadow-sm">
+                            <Calendar
+                              className={`w-5 h-5 ${themeColors.text}`}
+                            />
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <p
-                                className={`font-bold text-base ${titleColor}`}
+                                className={`font-bold text-base ${themeColors.text}`}
                               >
                                 {deadlineLabels[item.type]}
                               </p>
                               <span
-                                className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-sm ${badgeClass}`}
+                                className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-sm ${
+                                  isExpired
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-red-50 text-red-500"
+                                }`}
                               >
                                 {isExpired ? "Scaduto" : `-${item.days} gg`}
                               </span>
                             </div>
                             <p
-                              className={`text-sm mt-0.5 opacity-80 font-medium ${titleColor}`}
+                              className={`text-sm mt-0.5 opacity-80 font-medium ${themeColors.text}`}
                             >
                               {formatDate(item.date)}
                             </p>
@@ -440,92 +468,46 @@ const HomeView = ({
         )}
 
         {(cars.length > 0 || motos.length > 0) && (
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">
-              I Miei Veicoli
-            </h2>
-          </div>
+          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-5">
+            I Miei Veicoli
+          </h2>
         )}
 
-        {cars.length > 0 && (
-          <section>
-            <div className="space-y-4">
-              {cars.map((vehicle) => (
-                <div
-                  key={vehicle.id}
-                  onClick={() => {
-                    setSelectedVehicle(vehicle);
-                    setCurrentView("vehicle");
-                  }}
-                  className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 overflow-hidden shrink-0 border border-gray-100">
-                      {vehicle.image ? (
-                        <img
-                          src={vehicle.image}
-                          alt={vehicle.model}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Car className="w-7 h-7" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-xl leading-tight">
-                        {vehicle.make} {vehicle.model}
-                      </h3>
-                      <p className="text-gray-500 text-sm font-medium mt-1 uppercase font-mono">
-                        {vehicle.licensePlate || "Senza Targa"} • {vehicle.year}
-                      </p>
-                    </div>
-                    <ChevronRight className="text-gray-300 w-6 h-6 shrink-0 ml-2" />
-                  </div>
-                </div>
-              ))}
+        <div className="space-y-4">
+          {vehicles.map((vehicle) => (
+            <div
+              key={vehicle.id}
+              onClick={() => {
+                setSelectedVehicle(vehicle);
+                setCurrentView("vehicle");
+              }}
+              className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-5"
+            >
+              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 overflow-hidden shrink-0 border border-gray-100">
+                {vehicle.image ? (
+                  <img
+                    src={vehicle.image}
+                    alt={vehicle.model}
+                    className="w-full h-full object-cover"
+                  />
+                ) : vehicle.type === "car" ? (
+                  <Car className="w-7 h-7" />
+                ) : (
+                  <Bike className="w-7 h-7" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 text-xl leading-tight">
+                  {vehicle.make} {vehicle.model}
+                </h3>
+                <p className="text-gray-500 text-sm font-medium mt-1 uppercase font-mono">
+                  {vehicle.licensePlate || "Senza Targa"} • {vehicle.year}
+                </p>
+              </div>
+              <ChevronRight className="text-gray-300 w-6 h-6 shrink-0 ml-2" />
             </div>
-          </section>
-        )}
-
-        {motos.length > 0 && (
-          <section className="mt-8">
-            <div className="space-y-4">
-              {motos.map((vehicle) => (
-                <div
-                  key={vehicle.id}
-                  onClick={() => {
-                    setSelectedVehicle(vehicle);
-                    setCurrentView("vehicle");
-                  }}
-                  className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 overflow-hidden shrink-0 border border-gray-100">
-                      {vehicle.image ? (
-                        <img
-                          src={vehicle.image}
-                          alt={vehicle.model}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Bike className="w-7 h-7" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-xl leading-tight">
-                        {vehicle.make} {vehicle.model}
-                      </h3>
-                      <p className="text-gray-500 text-sm font-medium mt-1 uppercase font-mono">
-                        {vehicle.licensePlate || "Senza Targa"} • {vehicle.year}
-                      </p>
-                    </div>
-                    <ChevronRight className="text-gray-300 w-6 h-6 shrink-0 ml-2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+          ))}
+        </div>
       </main>
 
       <button
@@ -548,7 +530,6 @@ const VehicleDetailView = ({
   const [activeTab, setActiveTab] = useState("deadlines");
   const [docSubTab, setDocSubTab] = useState("bolli");
   const [expandedTagliando, setExpandedTagliando] = useState(null);
-
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
   const v = selectedVehicle;
@@ -561,14 +542,12 @@ const VehicleDetailView = ({
     return acc;
   }, {});
   const sortedYears = Object.keys(docsByYear).sort((a, b) => b - a);
-
   const maintenanceWithPhotos = (v.maintenance || []).filter((m) =>
     m.parts?.some((p) => p.image)
   );
 
   return (
     <div className="h-screen flex flex-col bg-slate-50 animate-in slide-in-from-right-4 duration-300">
-      {/* VISUALIZZATORE IMMAGINE A SCHERMO INTERO CON DOWNLOAD */}
       {fullScreenImage && (
         <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[110] flex flex-col items-center justify-center animate-in fade-in duration-200">
           <button
@@ -577,13 +556,11 @@ const VehicleDetailView = ({
           >
             <X className="w-6 h-6" />
           </button>
-
           <img
             src={fullScreenImage}
             alt="Ingrandimento"
             className="max-w-[90%] max-h-[70vh] object-contain rounded-2xl shadow-2xl"
           />
-
           <button
             onClick={() => {
               const link = document.createElement("a");
@@ -678,54 +655,50 @@ const VehicleDetailView = ({
               const isExpired = days !== null && days < 0;
               const themeColors =
                 colorOptions[pref.color] || colorOptions.orange;
-
-              const containerClass = `${themeColors.lightBg} border border-transparent shadow-sm`;
-              const iconBg = `bg-white ${themeColors.text} shadow-sm`;
-              const titleColor = themeColors.text;
-              const dateColor = "text-gray-600";
-
-              let daysColor = `${themeColors.text} font-bold`;
-              if (isExpired) daysColor = "text-red-600 font-bold";
-              else if (isWarning) daysColor = "text-red-500 font-bold";
-
-              const isClickable = isWarning;
-
               return (
                 <div
                   key={type}
                   onClick={
-                    isClickable ? () => onDeadlineClick(v, type) : undefined
+                    isWarning ? () => onDeadlineClick(v, type) : undefined
                   }
                   className={`p-6 rounded-[32px] flex items-center justify-between transition-all ${
-                    isClickable
+                    isWarning
                       ? "cursor-pointer active:scale-95"
                       : "cursor-default opacity-80"
-                  } ${containerClass}`}
+                  } ${themeColors.lightBg} shadow-sm`}
                 >
                   <div className="flex items-center gap-5">
                     <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}
+                      className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 bg-white ${themeColors.text} shadow-sm`}
                     >
                       <Calendar className="w-6 h-6" />
                     </div>
                     <div>
                       <p
                         className={`font-bold text-xl leading-tight ${
-                          isExpired ? "text-red-700" : titleColor
+                          isExpired ? "text-red-700" : themeColors.text
                         }`}
                       >
                         {deadlineLabels[type]}
                       </p>
                       <p
                         className={`text-base font-medium mt-1 ${
-                          isExpired ? "text-red-600" : dateColor
+                          isExpired ? "text-red-600" : "text-gray-600"
                         }`}
                       >
                         {formatDate(date)}
                       </p>
                     </div>
                   </div>
-                  <div className={`text-right ${daysColor}`}>
+                  <div
+                    className={`text-right ${
+                      isExpired
+                        ? "text-red-600"
+                        : isWarning
+                        ? "text-red-500"
+                        : themeColors.text
+                    } font-bold`}
+                  >
                     <p className="text-xs font-semibold uppercase tracking-wider mb-1">
                       {days === null ? "Stato" : "Tra"}
                     </p>
@@ -775,9 +748,7 @@ const VehicleDetailView = ({
                     (a, b) => a + b,
                     0
                   );
-
                   if (total === 0) return null;
-
                   return (
                     <div>
                       <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
@@ -824,7 +795,7 @@ const VehicleDetailView = ({
                             setSelectedMaintenance(record);
                             setCurrentView("edit-maintenance");
                           }}
-                          className="bg-white p-6 rounded-3xl shadow-sm relative active:scale-[0.98] transition-all cursor-pointer border border-transparent hover:border-gray-200"
+                          className="bg-white p-6 rounded-3xl shadow-sm relative active:scale-[0.98] transition-all cursor-pointer border border-transparent hover:border-gray-200 hover:shadow-md"
                         >
                           <div className="absolute top-5 right-5 text-gray-300">
                             <Pencil className="w-5 h-5" />
@@ -846,12 +817,12 @@ const VehicleDetailView = ({
                               {record.parts.map((part) => (
                                 <div
                                   key={part.id}
-                                  className="flex justify-between items-center text-sm"
+                                  className="flex justify-between items-center text-sm gap-4"
                                 >
-                                  <span className="text-slate-600 font-medium">
+                                  <span className="text-slate-600 font-medium truncate flex-1">
                                     {part.name}
                                   </span>
-                                  <span className="font-bold text-slate-900">
+                                  <span className="font-bold text-slate-900 shrink-0">
                                     €{part.cost}
                                   </span>
                                 </div>
@@ -971,7 +942,7 @@ const VehicleDetailView = ({
                             className="p-5 flex justify-between items-center cursor-pointer active:bg-gray-50"
                           >
                             <div>
-                              <p className="font-bold text-gray-900 text-lg">
+                              <p className="font-bold text-gray-900 text-lg leading-tight">
                                 {record.description}
                               </p>
                               <p className="text-sm font-medium text-gray-500 mt-1">
@@ -989,7 +960,6 @@ const VehicleDetailView = ({
                               />
                             </div>
                           </div>
-
                           {isExpanded && (
                             <div className="p-5 border-t border-gray-100 bg-slate-50 space-y-4 animate-in slide-in-from-top-2">
                               {record.parts
@@ -997,9 +967,9 @@ const VehicleDetailView = ({
                                 .map((part) => (
                                   <div
                                     key={part.id}
-                                    className="flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-200 shadow-sm"
+                                    className="flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-200 shadow-sm gap-4"
                                   >
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4 min-w-0">
                                       <div
                                         className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden shrink-0 border border-gray-200 cursor-pointer active:opacity-70 transition-opacity"
                                         onClick={() =>
@@ -1012,11 +982,11 @@ const VehicleDetailView = ({
                                           alt={part.name}
                                         />
                                       </div>
-                                      <span className="font-bold text-gray-800 text-base">
+                                      <span className="font-bold text-gray-800 text-base truncate flex-1">
                                         {part.name}
                                       </span>
                                     </div>
-                                    <span className="font-bold text-gray-900 text-lg">
+                                    <span className="font-bold text-gray-900 text-lg shrink-0">
                                       €{part.cost}
                                     </span>
                                   </div>
@@ -1053,9 +1023,7 @@ const VehicleDetailView = ({
   );
 };
 
-// ==========================================
-// MODULO: NUOVO/MODIFICA LAVORO (OTTIMIZZATO E COMPATTO)
-// ==========================================
+// --- FORM: MANUTENZIONE (Migliorato per Fotocamera) ---
 const MaintenanceFormView = ({
   setCurrentView,
   vehicles,
@@ -1082,18 +1050,21 @@ const MaintenanceFormView = ({
   const [parts, setParts] = useState(
     isEditMode && selectedMaintenance?.parts ? selectedMaintenance.parts : []
   );
-
   const [partName, setPartName] = useState("");
   const [partCost, setPartCost] = useState("");
   const [partImage, setPartImage] = useState(null);
-
+  const [showPhotoSelector, setShowPhotoSelector] = useState(false); // Nuovo stato
   const [setReminder, setSetReminder] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Aggiorna costo totale al variare dei pezzi
   useEffect(() => {
     if (parts.length > 0) {
-      const total = parts.reduce((sum, p) => sum + parseFloat(p.cost || 0), 0);
-      setCost(total);
+      const totalPartsCost = parts.reduce(
+        (sum, p) => sum + parseFloat(p.cost || 0),
+        0
+      );
+      setCost(totalPartsCost);
     }
   }, [parts]);
 
@@ -1120,47 +1091,39 @@ const MaintenanceFormView = ({
     if (newParts.length === 0) setCost("");
   };
 
-  const handlePartImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width);
-          width = MAX_WIDTH;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        setPartImage(canvas.toDataURL("image/jpeg", 0.6));
-      };
-      img.src = event.target.result;
+  // Compressione immagine ricambio
+  const processImage = (base64Str) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX_WIDTH = 600;
+      let width = img.width;
+      let height = img.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      setPartImage(canvas.toDataURL("image/jpeg", 0.7));
+      setShowPhotoSelector(false); // Chiude il selettore
     };
-    reader.readAsDataURL(file);
+    img.src = base64Str;
   };
 
   const handleSave = (e) => {
     e.preventDefault();
-
     let finalParts = [...parts];
-    if (partName.trim() && partCost) {
+    // Se c'è un pezzo "in sospeso" nell'input, lo aggiunge
+    if (partName.trim() && partCost)
       finalParts.push({
         id: Date.now().toString(),
         name: partName,
         cost: parseFloat(partCost),
         image: partImage,
       });
-    }
 
     const recordData = {
       id: isEditMode ? selectedMaintenance.id : Date.now().toString(),
@@ -1170,6 +1133,7 @@ const MaintenanceFormView = ({
       cost: parseFloat(cost) || 0,
       parts: finalParts,
     };
+
     const updatedVehicles = vehicles.map((v) => {
       if (v.id === selectedVehicle.id) {
         let newM = isEditMode
@@ -1197,8 +1161,15 @@ const MaintenanceFormView = ({
 
   return (
     <div className="min-h-screen bg-white animate-in slide-in-from-bottom-full duration-300 relative overflow-y-auto">
+      {showPhotoSelector && (
+        <PhotoSourceSelector
+          onImageSelected={processImage}
+          onCancel={() => setShowPhotoSelector(false)}
+        />
+      )}
+
       {showDeleteConfirm && (
-        <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-6 animate-in fade-in">
+        <div className="absolute inset-0 bg-black/60 z-[160] flex items-center justify-center p-6 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-8 h-8" />
@@ -1207,14 +1178,13 @@ const MaintenanceFormView = ({
               Eliminare intervento?
             </h3>
             <p className="text-center text-gray-500 text-sm mb-6">
-              Questa azione rimuoverà definitivamente questo lavoro dalla
-              cronologia.
+              Questa azione rimuoverà definitivamente questo lavoro.
             </p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl"
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:bg-gray-200"
               >
                 Annulla
               </button>
@@ -1223,10 +1193,12 @@ const MaintenanceFormView = ({
                 onClick={() => {
                   const updated = vehicles.map((v) => {
                     if (v.id === selectedVehicle.id) {
-                      const m = v.maintenance.filter(
-                        (mx) => mx.id !== selectedMaintenance.id
-                      );
-                      const uv = { ...v, maintenance: m };
+                      const uv = {
+                        ...v,
+                        maintenance: v.maintenance.filter(
+                          (mx) => mx.id !== selectedMaintenance.id
+                        ),
+                      };
                       setSelectedVehicle(uv);
                       return uv;
                     }
@@ -1235,7 +1207,7 @@ const MaintenanceFormView = ({
                   setVehicles(updated);
                   setCurrentView("vehicle");
                 }}
-                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl"
+                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl active:bg-red-700"
               >
                 Elimina
               </button>
@@ -1244,7 +1216,7 @@ const MaintenanceFormView = ({
         </div>
       )}
 
-      <header className="pt-12 pb-4 px-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10 shadow-sm">
+      <header className="pt-12 pb-4 px-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-[60] shadow-sm">
         <button
           onClick={() => setCurrentView("vehicle")}
           className="p-2 -ml-2 text-gray-500 active:bg-gray-100 rounded-full"
@@ -1257,16 +1229,15 @@ const MaintenanceFormView = ({
         <div className="w-10"></div>
       </header>
 
-      {/* MODULO COMPATTATO */}
       <form onSubmit={handleSave} className="p-5 space-y-5 pb-24">
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-            Descrizione Intervento
+            Descrizione
           </label>
           <input
             required
             type="text"
-            placeholder="es. Cambio olio e filtri"
+            placeholder="Cambio olio..."
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             className="w-full p-3.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:outline-none transition-all text-sm shadow-sm"
@@ -1288,7 +1259,7 @@ const MaintenanceFormView = ({
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              Chilometri
+              KM
             </label>
             <div className="relative">
               <input
@@ -1297,9 +1268,9 @@ const MaintenanceFormView = ({
                 placeholder="50000"
                 value={km}
                 onChange={(e) => setKm(e.target.value)}
-                className="w-full p-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none pr-8 text-sm shadow-sm"
+                className="w-full p-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 pr-10 text-sm shadow-sm"
               />
-              <span className="absolute right-3 top-3.5 text-gray-400 font-bold text-sm">
+              <span className="absolute right-3.5 top-3.5 text-gray-400 font-bold text-sm">
                 km
               </span>
             </div>
@@ -1314,11 +1285,12 @@ const MaintenanceFormView = ({
             <input
               required
               type="number"
+              step="0.01"
               placeholder="150"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
               readOnly={parts.length > 0}
-              className={`w-full p-3.5 border rounded-xl focus:outline-none pl-8 text-sm shadow-sm ${
+              className={`w-full p-3.5 border rounded-xl focus:outline-none pl-10 text-sm shadow-sm ${
                 parts.length > 0
                   ? "bg-gray-100 border-gray-200 text-gray-500"
                   : "bg-white border-gray-200 focus:ring-2 focus:ring-gray-900"
@@ -1327,44 +1299,43 @@ const MaintenanceFormView = ({
             <span className="absolute left-3.5 top-3.5 text-gray-400 font-bold">
               €
             </span>
-            {parts.length > 0 && (
-              <p className="text-[10px] text-blue-500 font-bold absolute -bottom-4 left-1">
-                Calcolato in automatico dai ricambi
-              </p>
-            )}
           </div>
+          {parts.length > 0 && (
+            <p className="text-xs text-amber-600 font-medium mt-1.5 ml-1">
+              Calcolato automaticamente dai ricambi
+            </p>
+          )}
         </div>
 
         <div className="pt-5 border-t border-gray-200">
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-            Ricambi e Ricevute (Opzionale)
+            Ricambi / Foto (Opzionale)
           </label>
-
           {parts.map((p) => (
             <div
               key={p.id}
-              className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-2"
+              className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-2 gap-3"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 {p.image && (
                   <img
                     src={p.image}
-                    className="w-8 h-8 rounded-lg object-cover border border-gray-100"
+                    className="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0"
                     alt="Ricambio"
                   />
                 )}
-                <span className="text-sm font-bold text-gray-800">
+                <span className="text-sm font-bold text-gray-800 truncate flex-1">
                   {p.name}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 <span className="font-black text-gray-900 text-sm">
                   €{p.cost}
                 </span>
                 <button
                   type="button"
                   onClick={() => removePart(p.id)}
-                  className="text-red-500 p-1.5 bg-red-50 rounded-lg active:bg-red-100"
+                  className="text-red-500 p-2 bg-red-50 rounded-lg active:bg-red-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1372,30 +1343,27 @@ const MaintenanceFormView = ({
             </div>
           ))}
 
-          {/* BARRA RICAMBI COMPATTATA */}
-          <div className="flex gap-2 mt-3 items-center bg-gray-100 p-1.5 rounded-xl">
+          <div className="flex gap-2 mt-3 items-center bg-gray-100 p-1.5 rounded-xl shadow-inner">
             <input
               type="text"
               placeholder="Pezzo..."
               value={partName}
               onChange={(e) => setPartName(e.target.value)}
-              className="flex-1 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm"
+              className="flex-1 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
             />
             <input
               type="number"
+              step="0.01"
               placeholder="€"
               value={partCost}
               onChange={(e) => setPartCost(e.target.value)}
-              className="w-16 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm"
+              className="w-16 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
             />
-
-            <label className="flex items-center justify-center p-2.5 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePartImageChange}
-              />
+            <button
+              type="button"
+              onClick={() => setShowPhotoSelector(true)}
+              className="flex items-center justify-center p-2.5 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm"
+            >
               {partImage ? (
                 <img
                   src={partImage}
@@ -1405,42 +1373,34 @@ const MaintenanceFormView = ({
               ) : (
                 <Camera className="w-5 h-5 text-gray-400" />
               )}
-            </label>
-
+            </button>
             <button
               type="button"
               onClick={handleAddPart}
               disabled={!partName.trim() || !partCost}
-              className="bg-gray-900 text-white p-2.5 rounded-lg disabled:opacity-50 shadow-sm"
+              className="bg-gray-900 text-white p-2.5 rounded-lg disabled:opacity-50 shadow-sm active:scale-95"
             >
               <Plus className="w-5 h-5" />
             </button>
           </div>
-          {partImage && (
-            <p className="text-[10px] text-emerald-600 mt-1.5 font-bold ml-1">
-              ✓ Foto pronta per il salvataggio
-            </p>
-          )}
         </div>
 
         <div className="pt-5 border-t border-gray-200">
           <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-xl border border-emerald-100 shadow-sm">
             <div>
-              <p className="text-sm font-bold text-emerald-900">
-                Promemoria Tagliando
-              </p>
+              <p className="text-sm font-bold text-emerald-900">Promemoria</p>
               <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
-                Aggiorna la scadenza tra 1 anno
+                Aggiorna scadenza tagliando tra 1 anno
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
               <input
                 type="checkbox"
                 className="sr-only peer"
                 checked={setReminder}
                 onChange={(e) => setSetReminder(e.target.checked)}
               />
-              <div className="w-12 h-7 bg-emerald-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              <div className="w-12 h-7 bg-emerald-200/50 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
             </label>
           </div>
         </div>
@@ -1449,7 +1409,7 @@ const MaintenanceFormView = ({
           type="submit"
           className="w-full py-4 bg-gray-900 text-white rounded-xl font-black uppercase tracking-wider text-sm active:scale-[0.98] shadow-xl shadow-gray-900/20 mt-2"
         >
-          {isEditMode ? "Salva Modifiche" : "Salva Intervento"}
+          {isEditMode ? "Salva Modifiche" : "Salva Lavoro"}
         </button>
         {isEditMode && (
           <button
@@ -1457,7 +1417,7 @@ const MaintenanceFormView = ({
             onClick={() => setShowDeleteConfirm(true)}
             className="w-full py-4 mt-3 bg-red-50 text-red-600 rounded-xl font-black uppercase tracking-wider text-sm active:scale-[0.98]"
           >
-            Elimina Intervento
+            Elimina Lavoro
           </button>
         )}
       </form>
@@ -1465,6 +1425,7 @@ const MaintenanceFormView = ({
   );
 };
 
+// --- FORM: VEICOLO (Migliorato per Fotocamera) ---
 const VehicleFormView = ({
   setCurrentView,
   vehicles,
@@ -1485,14 +1446,12 @@ const VehicleFormView = ({
   const [service, setService] = useState(v?.deadlines?.service || "");
   const [image, setImage] = useState(v?.image || null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   const [rawImage, setRawImage] = useState(null);
+  const [showPhotoSelector, setShowPhotoSelector] = useState(false); // Nuovo
 
   const formatTitleCase = (str) =>
     str ? str.replace(/\b\w/g, (char) => char.toUpperCase()) : "";
-
   const showStep2 = isEditMode || type !== "";
-  const showStep3 = isEditMode || (showStep2 && make.trim() !== "");
   const isFormComplete = type !== "" && make.trim() !== "";
 
   const handleSave = (e) => {
@@ -1521,33 +1480,34 @@ const VehicleFormView = ({
     }
   };
 
-  const handleFileChange = (e) => {
-    const f = e.target.files[0];
-    if (f) {
-      const r = new FileReader();
-      r.onloadend = () => setRawImage(r.result);
-      r.readAsDataURL(f);
-    }
+  const startPhotoProcess = (base64Str) => {
+    setRawImage(base64Str);
+    setShowPhotoSelector(false);
   };
 
-  if (rawImage) {
+  if (rawImage)
     return (
       <ImageCropper
         imageSrc={rawImage}
-        onCropDone={(croppedImg) => {
-          setImage(croppedImg);
+        onCropDone={(img) => {
+          setImage(img);
           setRawImage(null);
         }}
         onCancel={() => setRawImage(null)}
       />
     );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 animate-in slide-in-from-bottom-full duration-300 relative overflow-y-auto pb-20">
-      {/* Modal di Conferma Eliminazione Veicolo */}
+      {showPhotoSelector && (
+        <PhotoSourceSelector
+          onImageSelected={startPhotoProcess}
+          onCancel={() => setShowPhotoSelector(false)}
+        />
+      )}
+
       {showDeleteConfirm && (
-        <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-6 animate-in fade-in">
+        <div className="absolute inset-0 bg-black/60 z-[160] flex items-center justify-center p-6 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-8 h-8" />
@@ -1563,7 +1523,7 @@ const VehicleFormView = ({
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl"
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:bg-gray-200"
               >
                 Annulla
               </button>
@@ -1574,7 +1534,7 @@ const VehicleFormView = ({
                   setVehicles(updated);
                   setCurrentView("home");
                 }}
-                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl"
+                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl active:bg-red-700"
               >
                 Elimina
               </button>
@@ -1583,7 +1543,7 @@ const VehicleFormView = ({
         </div>
       )}
 
-      <header className="pt-12 pb-4 px-6 bg-white sticky top-0 z-10 flex items-center justify-between shadow-sm">
+      <header className="pt-12 pb-4 px-6 bg-white sticky top-0 z-[60] flex items-center justify-between shadow-sm">
         <button
           onClick={() => setCurrentView(isEditMode ? "vehicle" : "home")}
           className="p-2 -ml-2 text-gray-500 active:bg-gray-100 rounded-full"
@@ -1597,14 +1557,10 @@ const VehicleFormView = ({
       </header>
       <form onSubmit={handleSave} className="p-6 space-y-8">
         <div className="flex flex-col items-center mb-6">
-          <div className="relative w-32 h-32 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden active:bg-gray-200 transition-colors shadow-inner">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              title="Scegli foto"
-            />
+          <div
+            onClick={() => setShowPhotoSelector(true)}
+            className="relative w-32 h-32 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden active:bg-gray-200 transition-colors shadow-inner cursor-pointer"
+          >
             {image ? (
               <img
                 src={image}
@@ -1615,7 +1571,7 @@ const VehicleFormView = ({
               <>
                 <Camera className="w-8 h-8 text-gray-400 mb-1" />
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                  Foto
+                  Aggiungi Foto
                 </span>
               </>
             )}
@@ -1635,7 +1591,7 @@ const VehicleFormView = ({
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
             1. Tipo
           </h3>
-          <div className="flex bg-gray-200/50 p-1.5 rounded-2xl">
+          <div className="flex bg-gray-200/50 p-1.5 rounded-2xl shadow-inner">
             <button
               type="button"
               onClick={() => setType("car")}
@@ -1672,7 +1628,7 @@ const VehicleFormView = ({
                 placeholder="es. AB123CD"
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none font-mono uppercase text-xl shadow-sm text-center"
+                className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none font-mono uppercase text-2xl shadow-sm text-center tracking-wider"
               />
             </div>
             <div className="space-y-4">
@@ -1689,7 +1645,7 @@ const VehicleFormView = ({
                     required
                     value={make}
                     onChange={(e) => setMake(formatTitleCase(e.target.value))}
-                    className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none text-base shadow-sm"
+                    className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base shadow-sm"
                     placeholder="es. Fiat"
                   />
                 </div>
@@ -1701,7 +1657,7 @@ const VehicleFormView = ({
                     type="text"
                     value={model}
                     onChange={(e) => setModel(formatTitleCase(e.target.value))}
-                    className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none text-base shadow-sm"
+                    className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base shadow-sm"
                     placeholder="es. Panda"
                   />
                 </div>
@@ -1714,81 +1670,85 @@ const VehicleFormView = ({
                   type="number"
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
-                  className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none text-base shadow-sm"
+                  className="w-full p-4 mt-1 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base shadow-sm"
                   placeholder="es. 2021"
                 />
               </div>
             </div>
-          </div>
-        )}
 
-        {showStep3 && (
-          <div className="space-y-4 animate-in fade-in">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-              4. Scadenze (Opzionali)
-            </h3>
-            {[
-              {
-                l: "Assicurazione",
-                v: insurance,
-                s: setInsurance,
-                i: <FileText />,
-              },
-              { l: "Bollo", v: tax, s: setTax, i: <FileText /> },
-              {
-                l: "Revisione",
-                v: inspection,
-                s: setInspection,
-                i: <Wrench />,
-              },
-              { l: "Tagliando", v: service, s: setService, i: <Wrench /> },
-            ].map((s) => (
-              <div
-                key={s.l}
-                className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm"
-              >
-                <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                  {s.i}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                4. Scadenze (Opzionali)
+              </h3>
+              {[
+                {
+                  l: "Assicurazione",
+                  v: insurance,
+                  s: setInsurance,
+                  i: <FileText />,
+                },
+                { l: "Bollo", v: tax, s: setTax, i: <FileText /> },
+                {
+                  l: "Revisione",
+                  v: inspection,
+                  s: setInspection,
+                  i: <Wrench />,
+                },
+                { l: "Tagliando", v: service, s: setService, i: <Wrench /> },
+              ].map((s) => (
+                <div
+                  key={s.l}
+                  className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm relative"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                    {s.i}
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                      {s.l}
+                    </label>
+                    <input
+                      type="date"
+                      value={s.v}
+                      onChange={(e) => s.s(e.target.value)}
+                      className="w-full p-1 bg-transparent outline-none text-base font-semibold focus:text-gray-900"
+                    />
+                  </div>
+                  {s.v && (
+                    <button
+                      type="button"
+                      onClick={() => s.s("")}
+                      className="p-1.5 text-gray-300 absolute top-2 right-2 active:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <label className="text-xs font-bold text-gray-500 uppercase">
-                    {s.l}
-                  </label>
-                  <input
-                    type="date"
-                    value={s.v}
-                    onChange={(e) => s.s(e.target.value)}
-                    className="w-full p-2 bg-transparent outline-none text-base font-semibold"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
 
-        {showStep2 && (
-          <div className="animate-in fade-in pt-4">
-            <button
-              type="submit"
-              disabled={!isFormComplete}
-              className={`w-full py-5 rounded-2xl font-black uppercase tracking-wider text-lg transition-all ${
-                isFormComplete
-                  ? "bg-gray-900 text-white shadow-xl shadow-gray-900/20 active:scale-[0.98]"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              {isEditMode ? "Salva Modifiche" : "Salva Veicolo"}
-            </button>
-
-            {isEditMode && (
+            <div className="pt-4">
               <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full py-5 mt-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase tracking-wider text-base transition-all active:scale-[0.98]"
+                type="submit"
+                disabled={!isFormComplete}
+                className={`w-full py-5 rounded-2xl font-black uppercase tracking-wider text-lg transition-all ${
+                  isFormComplete
+                    ? "bg-gray-900 text-white shadow-xl shadow-gray-900/20 active:scale-[0.98]"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
               >
-                Elimina Veicolo
+                {isEditMode ? "Salva Modifiche" : "Salva Veicolo"}
               </button>
-            )}
+              {isEditMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full py-5 mt-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase tracking-wider text-base transition-all active:scale-[0.98]"
+                >
+                  Elimina Veicolo
+                </button>
+              )}
+            </div>
           </div>
         )}
       </form>
@@ -1806,32 +1766,28 @@ const AddDocumentView = ({
 }) => {
   const [title, setTitle] = useState(initialTitle || "");
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [showPhotoSelector, setShowPhotoSelector] = useState(false); // Nuovo
 
-  // COMPRESSIONE FOTO BOLLI E RICEVUTE
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 1000;
-        let width = img.width;
-        let height = img.height;
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width);
-          width = MAX_WIDTH;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        setPreviewUrl(canvas.toDataURL("image/jpeg", 0.8));
-      };
-      img.src = event.target.result;
+  // Compressione immagine documenti
+  const processImage = (base64Str) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX_WIDTH = 1000;
+      let width = img.width;
+      let height = img.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      setPreviewUrl(canvas.toDataURL("image/jpeg", 0.8));
+      setShowPhotoSelector(false);
     };
-    reader.readAsDataURL(file);
+    img.src = base64Str;
   };
 
   const handleSave = (e) => {
@@ -1856,11 +1812,18 @@ const AddDocumentView = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 animate-in slide-in-from-bottom-full duration-300">
-      <header className="pt-12 pb-4 px-6 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 animate-in slide-in-from-bottom-full duration-300 relative">
+      {showPhotoSelector && (
+        <PhotoSourceSelector
+          onImageSelected={processImage}
+          onCancel={() => setShowPhotoSelector(false)}
+        />
+      )}
+
+      <header className="pt-12 pb-4 px-6 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-[60] shadow-sm">
         <button
           onClick={() => setCurrentView("vehicle")}
-          className="p-2 -ml-2 text-gray-500"
+          className="p-2 -ml-2 text-gray-500 active:bg-gray-100 rounded-full"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -1878,24 +1841,22 @@ const AddDocumentView = ({
             placeholder="es. Scansione Bollo"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:outline-none text-base shadow-sm"
+            className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base shadow-sm"
           />
         </div>
+
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             Foto / Scansione
           </label>
           {!previewUrl ? (
-            <div className="relative border-4 border-dashed border-gray-200 rounded-3xl bg-white flex flex-col items-center justify-center py-16 text-gray-400 active:bg-gray-50 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
+            <div
+              onClick={() => setShowPhotoSelector(true)}
+              className="relative border-4 border-dashed border-gray-200 rounded-3xl bg-white flex flex-col items-center justify-center py-16 text-gray-400 active:bg-gray-50 transition-colors cursor-pointer shadow-inner"
+            >
               <ImageIcon className="w-12 h-12 mb-4" />
               <p className="font-bold uppercase tracking-wider text-sm">
-                Scegli Immagine
+                Aggiungi Immagine
               </p>
             </div>
           ) : (
@@ -1903,21 +1864,23 @@ const AddDocumentView = ({
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="w-full h-auto max-h-80 object-cover"
+                className="w-full h-auto max-h-80 object-contain mx-auto bg-gray-50"
               />
               <button
                 type="button"
                 onClick={() => setPreviewUrl(null)}
-                className="absolute top-4 right-4 bg-white/95 text-red-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-transform"
+                className="absolute top-4 right-4 bg-white/95 text-red-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-transform flex items-center gap-2"
               >
-                Rimuovi
+                <Trash2 className="w-4 h-4" /> Rimuovi
               </button>
             </div>
           )}
         </div>
+
         <button
           type="submit"
-          className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-wider text-lg shadow-xl shadow-gray-900/20 active:scale-[0.98]"
+          disabled={!previewUrl}
+          className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-wider text-lg shadow-xl shadow-gray-900/20 active:scale-[0.98] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
         >
           Salva Documento
         </button>
@@ -1929,7 +1892,7 @@ const AddDocumentView = ({
 const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
   return (
     <div className="min-h-screen bg-slate-50 animate-in slide-in-from-right-4 duration-300 pb-10 overflow-y-auto">
-      <header className="pt-12 pb-6 px-6 bg-white border-b border-gray-100 sticky top-0 z-10">
+      <header className="pt-12 pb-6 px-6 bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <button
           onClick={() => setCurrentView("home")}
           className="flex items-center text-gray-500 mb-4 active:opacity-50 font-medium"
@@ -1954,9 +1917,9 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
                   }`}
                 >
                   {preferences.notificationsEnabled ? (
-                    <BellRing className="w-7 h-7" />
+                    <Bell className="w-7 h-7" />
                   ) : (
-                    <BellOff className="w-7 h-7" />
+                    <Bell className="w-7 h-7 opacity-50" />
                   )}
                 </div>
                 <div>
@@ -1980,17 +1943,13 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
                     })
                   }
                 />
-                <div className="w-14 h-8 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-14 h-8 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
               </label>
             </div>
             {preferences.notificationsEnabled && (
-              <div className="border-t border-gray-100 bg-slate-50/50 p-6 space-y-6">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Impostazioni per tipo
-                </h3>
-
+              <div className="border-t border-gray-100 bg-slate-50/50 p-6 space-y-6 animate-in slide-in-from-top-3">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-4">
                     <div>
                       <span className="font-bold text-gray-900 block text-base">
                         Orario di ricezione
@@ -2008,11 +1967,10 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
                           notificationTime: e.target.value,
                         })
                       }
-                      className="bg-slate-50 border border-gray-200 text-gray-900 text-lg rounded-xl p-2.5 font-bold outline-none"
+                      className="bg-slate-50 border border-gray-200 text-gray-900 text-lg rounded-xl p-2.5 font-bold outline-none focus:ring-1 focus:ring-gray-900"
                     />
                   </div>
                 </div>
-
                 {Object.keys(deadlineLabels).map((type) => {
                   const currentPref = preferences.deadlines[type];
                   return (
@@ -2020,7 +1978,7 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
                       key={type}
                       className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm"
                     >
-                      <div className="flex justify-between items-center mb-4">
+                      <div className="flex justify-between items-center mb-4 gap-4">
                         <span className="font-bold text-gray-900 text-base">
                           {deadlineLabels[type]}
                         </span>
@@ -2038,7 +1996,7 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
                               },
                             })
                           }
-                          className="bg-slate-50 border border-gray-200 text-gray-700 text-sm rounded-xl p-2.5 font-bold outline-none"
+                          className="bg-slate-50 border border-gray-200 text-gray-700 text-sm rounded-xl p-2.5 font-bold outline-none focus:ring-1 focus:ring-gray-900"
                         >
                           <option value={15}>15 gg prima</option>
                           <option value={30}>30 gg prima</option>
@@ -2094,32 +2052,26 @@ const PreferencesView = ({ preferences, setPreferences, setCurrentView }) => {
   );
 };
 
-// ==========================================
-// APP E LOGICA BACKUP E NAVIGATION
-// ==========================================
 export default function App() {
   const [vehicles, setVehicles] = useState(() => {
     try {
-      const saved = localStorage.getItem("garage_data");
-      return saved ? JSON.parse(saved) : initialVehicles;
+      return JSON.parse(localStorage.getItem("garage_data")) || initialVehicles;
     } catch (e) {
       return initialVehicles;
     }
   });
-
   const [rawPreferences, setPreferences] = useState(() => {
     try {
-      const saved = localStorage.getItem("garage_prefs");
-      return saved ? JSON.parse(saved) : defaultPreferences;
+      return (
+        JSON.parse(localStorage.getItem("garage_prefs")) || defaultPreferences
+      );
     } catch (e) {
       return defaultPreferences;
     }
   });
-
   const [localBackups, setLocalBackups] = useState(() => {
     try {
-      const saved = localStorage.getItem("garage_auto_backups");
-      return saved ? JSON.parse(saved) : [];
+      return JSON.parse(localStorage.getItem("garage_auto_backups")) || [];
     } catch (e) {
       return [];
     }
@@ -2167,20 +2119,13 @@ export default function App() {
     try {
       localStorage.setItem("garage_data", JSON.stringify(vehicles));
       localStorage.setItem("garage_prefs", JSON.stringify(rawPreferences));
-    } catch (e) {
-      console.error(e);
-      alert(
-        "Attenzione: La memoria del dispositivo è piena. Elimina foto vecchie per poter salvare nuovi dati."
-      );
-    }
+    } catch (e) {}
   }, [vehicles, rawPreferences]);
-
   useEffect(() => {
     try {
       localStorage.setItem("garage_auto_backups", JSON.stringify(localBackups));
     } catch (e) {}
   }, [localBackups]);
-
   useEffect(() => {
     if (safePreferences.autoBackup.enabled && vehicles.length > 0) {
       const now = new Date().getTime();
@@ -2190,16 +2135,16 @@ export default function App() {
           safePreferences.autoBackup.frequency === "weekly"
             ? 604800000
             : 86400000;
-
-        if (!lastBackup || now - lastBackup.timestamp > interval) {
-          const newBackup = {
-            id: now.toString(),
-            timestamp: now,
-            date: new Date().toISOString(),
-            data: vehicles,
-          };
-          return [newBackup, ...prev].slice(0, 3);
-        }
+        if (!lastBackup || now - lastBackup.timestamp > interval)
+          return [
+            {
+              id: now.toString(),
+              timestamp: now,
+              date: new Date().toISOString(),
+              data: vehicles,
+            },
+            ...prev,
+          ].slice(0, 3);
         return prev;
       });
     }
@@ -2214,36 +2159,32 @@ export default function App() {
     if (!currentDate) return;
     const d = new Date(currentDate);
     d.setFullYear(d.getFullYear() + (type === "inspection" ? 2 : 1));
-    const newDate = d.toISOString().split("T")[0];
-    setRenewPrompt({ step: 1, vehicle, type, newDate });
+    setRenewPrompt({
+      step: 1,
+      vehicle,
+      type,
+      newDate: d.toISOString().split("T")[0],
+    });
   };
 
   const handleConfirmRenew = () => {
-    const uv = vehicles.map((v) => {
-      if (v.id === renewPrompt.vehicle.id) {
-        return {
-          ...v,
-          deadlines: {
-            ...v.deadlines,
-            [renewPrompt.type]: renewPrompt.newDate,
-          },
-        };
-      }
-      return v;
-    });
+    const uv = vehicles.map((v) =>
+      v.id === renewPrompt.vehicle.id
+        ? {
+            ...v,
+            deadlines: {
+              ...v.deadlines,
+              [renewPrompt.type]: renewPrompt.newDate,
+            },
+          }
+        : v
+    );
     setVehicles(uv);
-
-    if (selectedVehicle && selectedVehicle.id === renewPrompt.vehicle.id) {
+    if (selectedVehicle?.id === renewPrompt.vehicle.id)
       setSelectedVehicle(uv.find((vx) => vx.id === renewPrompt.vehicle.id));
-    }
-
-    if (renewPrompt.type === "tax") {
-      setRenewPrompt({ ...renewPrompt, step: 2 });
-    } else {
-      setRenewPrompt(null);
-    }
+    if (renewPrompt.type === "tax") setRenewPrompt({ ...renewPrompt, step: 2 });
+    else setRenewPrompt(null);
   };
-
   const closeMenu = () => {
     setIsMenuOpen(false);
     setTimeout(() => setMenuView("main"), 300);
@@ -2251,9 +2192,8 @@ export default function App() {
 
   return (
     <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen shadow-2xl relative overflow-hidden text-slate-900 font-sans">
-      {/* Modali Rinnovo e Conferma */}
       {renewPrompt && (
-        <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-6 animate-in fade-in">
+        <div className="absolute inset-0 bg-black/60 z-[120] flex items-center justify-center p-6 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
             {renewPrompt.step === 1 ? (
               <>
@@ -2272,13 +2212,13 @@ export default function App() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setRenewPrompt(null)}
-                    className="flex-1 py-3 bg-gray-100 rounded-xl font-semibold"
+                    className="flex-1 py-3 bg-gray-100 rounded-xl font-semibold active:bg-gray-200"
                   >
                     Annulla
                   </button>
                   <button
                     onClick={handleConfirmRenew}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold"
+                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold active:bg-blue-700"
                   >
                     Aggiorna
                   </button>
@@ -2307,13 +2247,13 @@ export default function App() {
                       setRenewPrompt(null);
                       setCurrentView("add-document");
                     }}
-                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold shadow-lg"
+                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold shadow-lg active:bg-emerald-700"
                   >
                     Sì, allega foto
                   </button>
                   <button
                     onClick={() => setRenewPrompt(null)}
-                    className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold"
+                    className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold active:bg-gray-200"
                   >
                     Più tardi
                   </button>
@@ -2325,7 +2265,7 @@ export default function App() {
       )}
 
       {showClearConfirm && (
-        <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-6 animate-in fade-in">
+        <div className="absolute inset-0 bg-black/60 z-[120] flex items-center justify-center p-6 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 className="w-8 h-8" />
@@ -2340,7 +2280,7 @@ export default function App() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-3 bg-gray-100 font-semibold rounded-xl"
+                className="flex-1 py-3 bg-gray-100 font-semibold rounded-xl active:bg-gray-200"
               >
                 Annulla
               </button>
@@ -2350,7 +2290,7 @@ export default function App() {
                   setShowClearConfirm(false);
                   closeMenu();
                 }}
-                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-600/20"
+                className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl shadow-lg shadow-red-600/20 active:bg-red-700"
               >
                 Cancella
               </button>
@@ -2361,16 +2301,16 @@ export default function App() {
 
       {isMenuOpen && (
         <div
-          className="absolute inset-0 bg-black/50 z-40 transition-opacity"
+          className="absolute inset-0 bg-black/50 z-[90] transition-opacity duration-300"
           onClick={closeMenu}
         />
       )}
       <div
-        className={`absolute inset-y-0 left-0 w-80 bg-slate-50 z-50 transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
+        className={`absolute inset-y-0 left-0 w-80 bg-slate-50 z-[100] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="pt-12 pb-6 px-6 bg-white border-b flex justify-between items-center sticky top-0 z-10">
+        <div className="pt-12 pb-6 px-6 bg-white border-b flex justify-between items-center sticky top-0 z-10 shadow-sm">
           {menuView === "backup" ? (
             <button
               onClick={() => setMenuView("main")}
@@ -2474,12 +2414,11 @@ export default function App() {
                         })
                       }
                     />
-                    <div className="w-12 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500"></div>
+                    <div className="w-12 h-7 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500 shadow-inner"></div>
                   </label>
                 </div>
-
                 {safePreferences.autoBackup.enabled && (
-                  <div className="px-5 pb-5 bg-blue-50/50 flex justify-between items-center">
+                  <div className="px-5 pb-5 bg-blue-50/50 flex justify-between items-center animate-in slide-in-from-top-2">
                     <span className="text-sm font-semibold text-gray-600">
                       Frequenza:
                     </span>
@@ -2494,7 +2433,7 @@ export default function App() {
                           },
                         })
                       }
-                      className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg p-2 font-medium outline-none"
+                      className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg p-2 font-medium outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="daily">Giornaliero</option>
                       <option value="weekly">Settimanale</option>
@@ -2502,7 +2441,6 @@ export default function App() {
                     </select>
                   </div>
                 )}
-
                 <div className="p-5 border-t border-gray-100 space-y-4">
                   <button
                     onClick={() => {
@@ -2515,11 +2453,10 @@ export default function App() {
                       setLocalBackups((prev) => [nb, ...prev].slice(0, 3));
                       alert("Backup eseguito con successo!");
                     }}
-                    className="w-full py-4 mb-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-bold text-sm transition-colors uppercase tracking-wider"
+                    className="w-full py-4 mb-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-bold text-sm transition-colors uppercase tracking-wider active:scale-[0.98]"
                   >
                     Esegui Backup Locale
                   </button>
-
                   <div className="pt-2">
                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
                       Ultime 3 copie
@@ -2548,16 +2485,16 @@ export default function App() {
                                 onClick={() => {
                                   if (
                                     window.confirm(
-                                      "Ripristinare questo backup? I dati attuali verranno sovrascritti."
+                                      "Ripristinare questo backup?"
                                     )
                                   ) {
                                     setVehicles(b.data);
                                     closeMenu();
                                   }
                                 }}
-                                className="flex-1 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-800 active:bg-gray-100"
+                                className="flex-1 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-800 active:bg-gray-100 active:scale-95 transition-transform"
                               >
-                                Ripristina i Dati
+                                Ripristina
                               </button>
                             </div>
                           </div>
@@ -2567,8 +2504,7 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
                 <button
                   onClick={() => {
                     const dataStr = JSON.stringify(vehicles, null, 2);
@@ -2678,7 +2614,6 @@ export default function App() {
           preferences={safePreferences}
           setPreferences={setPreferences}
           setCurrentView={setCurrentView}
-          vehicles={vehicles}
         />
       )}
       {currentView === "add-maintenance" && (
