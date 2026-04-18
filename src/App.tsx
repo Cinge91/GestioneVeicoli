@@ -1359,26 +1359,30 @@ const MaintenanceFormView = ({
               onChange={(e) => setPartCost(e.target.value)}
               className="w-16 p-2.5 bg-white border border-transparent rounded-lg text-sm font-medium outline-none shadow-sm focus:ring-1 focus:ring-gray-900"
             />
+
+            {/* ANTEPRIMA FOTO MIGLIORATA */}
             <button
               type="button"
               onClick={() => setShowPhotoSelector(true)}
-              className="flex items-center justify-center p-2.5 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm"
+              className="relative flex items-center justify-center w-11 h-11 bg-white border border-transparent rounded-lg cursor-pointer active:bg-gray-50 transition-colors shadow-sm shrink-0 overflow-hidden"
             >
               {partImage ? (
                 <img
                   src={partImage}
-                  className="w-5 h-5 rounded-sm object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   alt="Anteprima"
                 />
               ) : (
                 <Camera className="w-5 h-5 text-gray-400" />
               )}
             </button>
+
+            {/* TASTO + */}
             <button
               type="button"
               onClick={handleAddPart}
               disabled={!partName.trim() || !partCost}
-              className="bg-gray-900 text-white p-2.5 rounded-lg disabled:opacity-50 shadow-sm active:scale-95"
+              className="bg-gray-900 text-white w-11 h-11 flex items-center justify-center rounded-lg disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95 shrink-0 transition-opacity"
             >
               <Plus className="w-5 h-5" />
             </button>
